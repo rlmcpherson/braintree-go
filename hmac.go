@@ -41,18 +41,14 @@ func (h hmacer) verifySignature(signature, payload string) (bool, error) {
 }
 
 func (h hmacer) parseSignature(signatureKeyPair string) (string, error) {
-	if !strings.Contains(signatureKeyPair, "|") {
-		return "", SignatureError{"Signature-key pair does not contain |"}
+	pairs := strings.Split(signatureKeyPair, "&")
+	for _, p := range pairs {
+		kp := strings.Split(p, "|")
+		if len(kp) == 2 && kp[0] == h.PublicKey {
+			return kp[1], nil
+		}
 	}
-	split := strings.Split(signatureKeyPair, "|")
-	if len(split) != 2 {
-		return "", SignatureError{"Signature-key pair contains more than one |"}
-	}
-	publicKey := split[0]
-	if publicKey != h.Braintree.PublicKey {
-		return "", SignatureError{"Signature-key pair contains the wrong public key!"}
-	}
-	return split[1], nil
+	return "", SignatureError{"signature parsing error"}
 }
 
 func (h hmacer) hmac(payload string) (string, error) {
